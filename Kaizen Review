@@ -1,0 +1,4 @@
+What was built	-- Problem Found	-- Improvement Idea-- 	Impact
+Snake Movement	-- Lagging when snake grows	
+Use structure instead of std::deque	Faster processing
+Food Logic	-- Food spawning on snake body	-- Add a check loop for food position	-- Better gameplay
