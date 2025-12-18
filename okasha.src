@@ -1,0 +1,166 @@
+#include <iostream>
+#include <conio.h>
+#include <windows.h>
+#include <ctime>
+using namespace std;
+
+const int ROWS = 20;
+const int COLS = 40;
+
+struct Node {
+    int r, c;
+    Node* next;
+};
+
+Node* head = NULL;
+Node* tail = NULL;
+int snakeLength = 3;
+
+int dr = 0, dc = 1;  
+
+int foodR, foodC;
+
+void insertHead(int r, int c) {
+    Node* newNode = new Node{r, c, head};
+    head = newNode;
+    if (tail == NULL) tail = newNode;
+}
+
+void insertTail(int r, int c) {
+    Node* newNode = new Node{r, c, NULL};
+    if (head == NULL) {
+        head = tail = newNode;
+        return;
+    }
+    tail->next = newNode;
+    tail = newNode;
+}
+
+void removeTail() {
+    if (head == NULL || tail == NULL) return;
+
+    if (head == tail) {
+        delete tail;
+        head = tail = NULL;
+        return;
+    }
+
+    Node* temp = head;
+    while (temp->next != tail)
+        temp = temp->next;
+
+    delete tail;
+    tail = temp;
+    tail->next = NULL;
+}
+
+bool checkCollision(int r, int c) {
+    Node* temp = head;
+    while (temp != NULL) {
+        if (temp->r == r && temp->c == c) return true;
+        temp = temp->next;
+    }
+    return false;
+}
+
+void placeFood() {
+    foodR = rand() % ROWS;
+    foodC = rand() % COLS;
+}
+
+void drawBoard() {
+    system("cls");
+
+    for (int i = 0; i < COLS + 2; i++) cout << "-";
+    cout << endl;
+
+    for (int r = 0; r < ROWS; r++) {
+        cout << "|";
+        for (int c = 0; c < COLS; c++) {
+
+            bool printed = false;
+            Node* temp = head;
+
+            while (temp != NULL) {
+                if (temp->r == r && temp->c == c) {
+                    cout << (temp == head ? "S" : "o");
+                    printed = true;
+                    break;
+                }
+                temp = temp->next;
+            }
+
+            if (!printed && r == foodR && c == foodC) {
+                cout << "@";
+                printed = true;
+            }
+
+            if (!printed) cout << " ";
+        }
+        cout << "|" << endl;
+    }
+
+    for (int i = 0; i < COLS + 2; i++) cout << "-";
+    cout << endl;
+
+    cout << "Length: " << snakeLength << "   (use W S A D to move)\n";
+}
+
+void moveSnake() {
+    int newR = head->r + dr;
+    int newC = head->c + dc;
+
+    // Wall
+    if (newR < 0 || newR >= ROWS || newC < 0 || newC >= COLS) {
+        cout << "GAME OVER! Hit the wall.\n";
+        exit(0);
+    }
+
+    // Self (except tail)
+    Node* temp = head;
+    while (temp != NULL && temp != tail) {
+        if (temp->r == newR && temp->c == newC) {
+            cout << "GAME OVER! You hit yourself.\n";
+            exit(0);
+        }
+        temp = temp->next;
+    }
+
+    insertHead(newR, newC);
+
+    if (newR == foodR && newC == foodC) {
+        snakeLength++;
+        placeFood();
+    } else {
+        removeTail();
+    }
+}
+
+void handleInput() {
+    if (_kbhit()) {
+        char ch = _getch();
+
+        if (ch == 'w' && dr != 1) { dr = -1; dc = 0; }
+        if (ch == 's' && dr != -1) { dr = 1; dc = 0; }
+        if (ch == 'a' && dc != 1) { dr = 0; dc = -1; }
+        if (ch == 'd' && dc != -1) { dr = 0; dc = 1; }
+    }
+}
+
+int main() {
+    srand(time(0));
+
+    insertTail(10, 10);
+    insertTail(10, 9);
+    insertTail(10, 8);
+
+    placeFood();
+
+    while (true) {
+        drawBoard();
+        handleInput();
+        moveSnake();
+        Sleep(120);
+    }
+    return 0;
+}
